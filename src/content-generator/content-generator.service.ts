@@ -19,6 +19,7 @@ export class ContentGeneratorService {
   async generateContent(
     request: ContentGenerationRequest,
   ): Promise<GeneratedContent> {
+    console.log('generating content...');
     try {
       // Step 1: Research the topic
       const researchData = await this.researchAgentService.researchContent(

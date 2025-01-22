@@ -1,66 +1,25 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { OpenAIService } from '../openai/openai.service';
-import { ResearchAgentService } from '../research-agent/research-agent.service';
-import { ContentGeneratorService } from '../content-generator/content-generator.service';
-import { EmailService } from '../email/email.service';
-import { DocsService } from '../documents/document.service';
-import {
-  AgentResponse,
-  IdeaGenerationRequest,
-  IdeaGenerationResponse,
-} from './manager-agent.types';
 
 @Injectable()
 export class ManagerAgentService {
   private readonly logger = new Logger(ManagerAgentService.name);
 
-  constructor(
-    private readonly openAIService: OpenAIService,
-    private readonly researchAgentService: ResearchAgentService,
-    private readonly contentGeneratorService: ContentGeneratorService,
-    private readonly emailService: EmailService,
-    private readonly docsService: DocsService,
-  ) {}
-
-  private async getDefaultResponse(message: string): Promise<string> {
-    const prompt = `
-# About you:
-* You are a professional AI assistant
-* You aim to provide clear, helpful responses
-* You keep explanations concise and focused
-
-# Context:
-User message: "${message}"
-
-# Requirements:
-* Provide a professional and helpful response
-* If you cannot help, explain why briefly and suggest alternatives
-* Keep the response concise and clear
-
-Respond directly without including the above prompt structure.`;
-
-    try {
-      const response = await this.openAIService.getCompletion(prompt);
-      return response.trim();
-    } catch (error) {
-      this.logger.error(`Error getting default response: ${error}`);
-      return "I apologize, but I'm having trouble processing your request. Could you please rephrase or try again?";
-    }
-  }
+  constructor(private readonly openAIService: OpenAIService) {}
 
   async processInput(message: string): Promise<string> {
+    console.log('processing input...', message);
     try {
-      // Analyze user input to determine intent and required agents
       const analysis = await this.analyzeUserInput(message);
+      console.log('Analysis:', analysis);
 
-      // Handle different types of requests
       switch (analysis.primaryIntent) {
-        case 'content_creation':
-          return await this.handleContentCreation(message, analysis);
-        case 'email':
-          return await this.handleEmailTasks(message, analysis);
-        case 'document':
-          return await this.handleDocumentTasks(message, analysis);
+        case 'communication':
+          return await this.handleCommunicationTasks(message, analysis);
+        case 'research':
+          return await this.handleResearchTasks(message, analysis);
+        case 'content_generation':
+          return await this.handleContentTasks(message, analysis);
         default:
           return await this.getDefaultResponse(message);
       }
@@ -72,137 +31,76 @@ Respond directly without including the above prompt structure.`;
 
   private async analyzeUserInput(input: string) {
     const prompt = `
-      Analyze this user input and determine:
-      1. Primary intent (content_creation, email, document)
-      2. Required sub-tasks
-      3. Required agents
-      4. Key parameters
+# Context
+You are an Executive Director AI that manages multiple specialized agent teams.
 
-      User Input: "${input}"
+# Available Teams
+1. Communication Team: Handles emails, messaging, and other communication tasks
+2. Research Team: Conducts market research and other research activities
+3. Content Generation Team: Creates various types of content
+4. Default Response Team: Handles general queries and simple responses
 
-      Respond with only the JSON object, no markdown formatting.
-    `;
+# Input
+User message: "${input}"
+
+# Task
+Analyze the input and determine:
+1. Which team should handle this request (communication, research, content_generation, or default)
+2. What specific task needs to be performed
+3. Key parameters and requirements
+
+Respond with JSON only:
+{
+  "primaryIntent": string, // One of: communication, research, content_generation, default
+  "task": string,
+  "parameters": object
+}`;
 
     const response = await this.openAIService.getCompletion(prompt);
-    // Clean the response by removing markdown code block syntax if present
-    const cleanedResponse = response.replace(/```json\n?|\n?```/g, '').trim();
-    return JSON.parse(cleanedResponse);
+    return JSON.parse(response.replace(/```json\n?|\n?```/g, '').trim());
   }
 
-  private async handleContentCreation(
+  private async handleCommunicationTasks(
     message: string,
     analysis: any,
   ): Promise<string> {
-    // First, generate content ideas
-    const ideaRequest: IdeaGenerationRequest = {
-      topic: analysis.parameters.topic,
-      targetAudience: analysis.parameters.targetAudience,
-      contentType: analysis.parameters.contentType,
-      additionalContext: analysis.parameters.context,
-    };
-
-    const ideas = await this.generateContentIdeas(ideaRequest);
-
-    // Present ideas to user and wait for selection
-    // Note: In a real implementation, you'd need to handle this interaction asynchronously
-    const selectedIdea = ideas.ideas[0]; // For demonstration, using first idea
-
-    // Generate content based on selected idea
-    const content = await this.contentGeneratorService.generateContent({
-      topic: selectedIdea.title,
-      contentType: analysis.parameters.contentType,
-      tone: analysis.parameters.tone,
-      targetAudience: selectedIdea.targetAudience,
-      additionalContext: selectedIdea.description,
-    });
-
-    // Evaluate the generated content
-    const evaluation = await this.evaluateContent(content);
-
-    if (evaluation.success) {
-      return `Here's your content:\n\n${content.text}${
-        content.imageUrl ? `\n\nImage: ${content.imageUrl}` : ''
-      }`;
-    } else {
-      // If content needs improvement, regenerate with feedback
-      return await this.regenerateContent(content, evaluation.feedback);
-    }
+    this.logger.log('handling communication tasks...');
+    console.log('handling communication tasks...', message, analysis);
+    return 'Communication task handling';
   }
 
-  private async generateContentIdeas(
-    request: IdeaGenerationRequest,
-  ): Promise<IdeaGenerationResponse> {
+  private async handleResearchTasks(
+    message: string,
+    analysis: any,
+  ): Promise<string> {
+    this.logger.log('handling research tasks...');
+    console.log('handling research tasks...', message, analysis);
+    return 'Research task handling';
+  }
+
+  private async handleContentTasks(
+    message: string,
+    analysis: any,
+  ): Promise<string> {
+    this.logger.log('handling content tasks...');
+    console.log('handling content tasks...', message, analysis);
+    return 'Content task handling';
+  }
+
+  private async getDefaultResponse(message: string): Promise<string> {
+    this.logger.log('getting default response...');
     const prompt = `
-      Generate innovative content ideas for:
-      Topic: ${request.topic}
-      Target Audience: ${request.targetAudience || 'General'}
-      Content Type: ${request.contentType || 'All types'}
-      Additional Context: ${request.additionalContext || 'None'}
+# Context
+You are a helpful AI assistant providing simple responses to general queries.
 
-      For each idea, provide:
-      1. Title
-      2. Description
-      3. Potential Impact
-      4. Target Audience
-      5. Estimated Engagement
+# Input
+User message: "${message}"
 
-      Format as JSON.
-    `;
+# Task
+Provide a clear, concise, and helpful response.
+Keep it professional and friendly.`;
 
-    const response = await this.openAIService.getCompletion(prompt);
-    // Clean the response by removing markdown code block syntax if present
-    const cleanedResponse = response.replace(/```json\n?|\n?```/g, '').trim();
-    return JSON.parse(cleanedResponse);
-  }
-
-  private async evaluateContent(content: any): Promise<AgentResponse> {
-    const evaluationPrompt = `
-      Evaluate this content for:
-      1. Quality and engagement
-      2. Accuracy and relevance
-      3. Target audience alignment
-      4. Grammar and clarity
-      5. Overall impact
-
-      Content: ${JSON.stringify(content)}
-
-      Provide a detailed evaluation and whether it meets quality standards.
-      Include specific feedback if improvements are needed.
-      Format as JSON with 'success' and 'feedback' fields.
-    `;
-
-    const response = await this.openAIService.getCompletion(evaluationPrompt);
-    // Clean the response by removing markdown code block syntax if present
-    const cleanedResponse = response.replace(/```json\n?|\n?```/g, '').trim();
-    return JSON.parse(cleanedResponse);
-  }
-
-  private async regenerateContent(
-    content: any,
-    feedback: string,
-  ): Promise<string> {
-    console.log('Regenerating content based on feedback:', content, feedback);
-    // Implementation for regenerating content based on feedback
-    // This would involve calling the content generator again with refined parameters
-    return 'Content regeneration based on feedback';
-  }
-
-  // Additional methods for handling email and document tasks would go here
-  private async handleEmailTasks(
-    message: string,
-    analysis: any,
-  ): Promise<string> {
-    console.log('Handling email tasks:', message, analysis);
-    // Implementation for email-related tasks
-    return 'Email task handling';
-  }
-
-  private async handleDocumentTasks(
-    message: string,
-    analysis: any,
-  ): Promise<string> {
-    console.log('Handling document tasks:', message, analysis);
-    // Implementation for document-related tasks
-    return 'Document task handling';
+    console.log('getting default response...');
+    return await this.openAIService.getCompletion(prompt);
   }
 }

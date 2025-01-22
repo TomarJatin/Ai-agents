@@ -14,6 +14,7 @@ export class ResearchAgentService {
   }
 
   async researchContent(topic: string, contentType: string) {
+    console.log('researching content...');
     try {
       this.logger.log(`Researching content for topic: ${topic}`);
 
@@ -40,6 +41,7 @@ export class ResearchAgentService {
     topic: string,
     contentType: string,
   ) {
+    console.log('getting content research questions...');
     try {
       const prompt = getContentResearchPrompt(topic, contentType);
       const response = await this.openAIService.getCompletion(prompt);
@@ -53,6 +55,7 @@ export class ResearchAgentService {
   }
 
   private async getSearchResult(researchQuestions: string[]) {
+    console.log('getting search result...');
     try {
       if (!researchQuestions?.length) {
         this.logger.warn('No research questions provided');
@@ -91,6 +94,7 @@ export class ResearchAgentService {
     topic: string,
     searchResults: Map<string, ResearchAnswerResponse>,
   ) {
+    console.log('analyzing research results...');
     try {
       const researchData = Array.from(searchResults.entries()).map(
         ([question, answers]) => ({

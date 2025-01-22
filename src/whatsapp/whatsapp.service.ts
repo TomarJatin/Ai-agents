@@ -29,19 +29,30 @@ export class WhatsappService implements OnModuleInit {
       popup: true,
       qrTimeout: 0,
       port: 7001,
+      eventMode: true,
     });
 
-    this.client.onMessage(async (message: Message) => {
+    this.client.onAnyMessage(async (message: Message) => {
       await this.handleMessage(message);
     });
   }
 
   private async handleMessage(message: Message) {
-    // Only process messages from owner
-    if (message.from !== this.ownerNumber) {
+    // Process all messages from or to owner number
+
+    // if (!isFromOwner && !isToOwner) {
+    //   return;
+    // }
+    if (!message.from.includes('918527179469')) {
       return;
     }
-    console.log('message', message);
+
+    console.log('Received message:', {
+      from: message.from,
+      to: message.to,
+      body: message.body,
+      fromMe: message.fromMe,
+    });
 
     try {
       let inputText: string;
