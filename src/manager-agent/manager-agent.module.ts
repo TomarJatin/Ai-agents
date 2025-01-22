@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { ManagerAgentService } from './manager-agent.service';
+import { ExecutiveDirectorService } from './manager-agent.service';
 import { OpenAIModule } from '../openai/openai.module';
 import { ResearchAgentModule } from '../research-agent/research-agent.module';
 import { ContentGeneratorModule } from '../content-generator/content-generator.module';
@@ -18,11 +18,11 @@ import { DocsService } from 'src/documents/document.service';
     DocsModule,
   ],
   providers: [
-    ManagerAgentService,
+    ExecutiveDirectorService,
     EmailService,
     DocsService,
     ContentGeneratorService,
   ],
-  exports: [ManagerAgentService],
+  exports: [ExecutiveDirectorService],
 })
 export class ManagerAgentModule {}

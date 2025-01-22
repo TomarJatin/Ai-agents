@@ -2,7 +2,7 @@ import { Injectable, OnModuleInit } from '@nestjs/common';
 import { create, Client, Message } from '@open-wa/wa-automate';
 import { ConfigService } from '@nestjs/config';
 import { OpenAIService } from '../openai/openai.service';
-import { ManagerAgentService } from '../manager-agent/manager-agent.service';
+import { ExecutiveDirectorService } from '../manager-agent/manager-agent.service';
 
 @Injectable()
 export class WhatsappService implements OnModuleInit {
@@ -12,7 +12,7 @@ export class WhatsappService implements OnModuleInit {
   constructor(
     private configService: ConfigService,
     private openaiService: OpenAIService,
-    private managerAgentService: ManagerAgentService,
+    private ExecutiveDirectorService: ExecutiveDirectorService,
   ) {
     this.ownerNumber = this.configService.get<string>('WHATSAPP_OWNER_NUMBER');
   }
@@ -68,7 +68,8 @@ export class WhatsappService implements OnModuleInit {
       }
 
       // Get response from Manager Agent
-      const response = await this.managerAgentService.processInput(inputText);
+      const response =
+        await this.ExecutiveDirectorService.processInput(inputText);
 
       // Send response back
       await this.client.sendText(message.from, response);

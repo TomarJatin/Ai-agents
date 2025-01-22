@@ -2,8 +2,8 @@ import { Injectable, Logger } from '@nestjs/common';
 import { OpenAIService } from '../openai/openai.service';
 
 @Injectable()
-export class ManagerAgentService {
-  private readonly logger = new Logger(ManagerAgentService.name);
+export class ExecutiveDirectorService {
+  private readonly logger = new Logger(ExecutiveDirectorService.name);
 
   constructor(private readonly openAIService: OpenAIService) {}
 
